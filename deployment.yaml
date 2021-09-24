@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goserver
+  labels:
+    app: goserver
+spec:
+  selector:
+    matchLabels:
+      app: goserver
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: "goserver"
+    spec:
+      containers:
+        - name: goserver
+          image: "waldirmerotti97/go-server:2.4"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            periodSeconds: 5
+            failureThreshold: 3
+            timeoutSeconds: 1
+            successThreshold: 1
+
+          envFrom:
+            - configMapRef:
+                name: goserver-env
+            - secretRef:
+                name: goserver-secret
+
+          volumeMounts:
+            - mountPath: "/go/myfamily"
+              name: config
+
+      volumes:
+        - name: config
+          configMap:
+            name: configmap-family
+            items:
+            - key: members
+              path: "family.txt"
+
+
+#          env:
+#            - name: NAME
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: goserver-env
+#                  key: NAME
+#            - name: AGE
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: goserver-env
+#                  key: AGE
+
